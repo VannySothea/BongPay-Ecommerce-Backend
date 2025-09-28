@@ -12,7 +12,7 @@ model Product {
   name          String
   shortDesc     String
   fullDesc      String?
-  img           String
+  mainImageId   String @unique     // This is the main Media ID from Media Service
   rate          Float            @default(0)
   originalPrice Float
   stockQuantity Int
@@ -44,7 +44,7 @@ model ProductProperty {
 model Variant {
   id            Int      @id @default(autoincrement())
   name          String
-  img           String
+  imageId       String  @unique // Media ID from Media Service
   propertyValues String[]
   productId     Int
   product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)

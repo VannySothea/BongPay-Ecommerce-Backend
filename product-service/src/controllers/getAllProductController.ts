@@ -13,7 +13,7 @@ export const getAllProduct = async (req: Request, res: Response) => {
 				shortDesc: true,
 				originalPrice: true,
 				discount: true,
-				img: true,
+				mainImageId: true,
 			}
 		})
 		res.status(200).json({ success: true, products })
