@@ -1,5 +1,5 @@
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from 'dotenv';
+dotenv.config();
 
 import express from "express"
 import helmet from "helmet"
@@ -10,13 +10,13 @@ import { RedisReply, RedisStore } from "rate-limit-redis"
 import cookieParser from "cookie-parser"
 import logger from "./utils/logger"
 import errorHandler from "./middleware/errorHandler"
+import router from './routes/searchRoutes';
 import { connectDB } from "./prismaClient"
-import router from "./routes/mediaRoutes"
-import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq"
-import { handleMediaRemoved } from "./eventHandlers/media-event-handlers"
+import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq" 
+import { handleProductCreated, handleProductRemoved, handleProductUpdated } from './eventHandlers/product-event-handlers';
 
 const app = express()
-const PORT = process.env.PORT || 3003
+const PORT = process.env.PORT
 
 if (!process.env.REDIS_URL) {
 	logger.error("REDIS_URL is not defined")
@@ -52,6 +52,7 @@ const getClientIp = (req: express.Request): string => {
 	return req.ip || "unknown"
 }
 
+// IP based rate limiting for sensitive endpoints
 const sensitiveEndpointsLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 Mins
 	max: 100, //100 requests
@@ -80,7 +81,7 @@ const burstLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
 	keyPrefix: "middleware",
 	points: 10, // 10 requests
-	duration: 1, // per second
+	duration: 1, // per 1 second by IP
 })
 
 app.use((req, res, next) => {
@@ -88,8 +89,8 @@ app.use((req, res, next) => {
 		.consume(getClientIp(req))
 		.then(() => next())
 		.catch(() => {
-			logger.warn(`Burst rate limit exceeded for IP: ${getClientIp(req)}`)
-			res.status(429).json({
+			logger.warn(`Burst limit exceeded for IP: ${getClientIp(req)}`)
+			return res.status(429).json({
 				success: false,
 				message: "Too many requests",
 			})
@@ -99,20 +100,21 @@ app.use((req, res, next) => {
 // Stricter rate limiting only for sensitive endpoints (register/login/etc.)
 
 // Global per-IP rate limiting (short burst protection)
-app.use("/api/media", router)
+app.use("/api/search", router)
 app.use(errorHandler)
 
 async function startServer() {
 	try {
 		await connectDB()
 		await connectToRabbitMQ()
-		await consumeEvent("media.removed", handleMediaRemoved)
-		await consumeEvent("product.removed", handleMediaRemoved)
+        await consumeEvent("product.added", handleProductCreated)
+        await consumeEvent("product.updated", handleProductUpdated)
+        await consumeEvent("product.removed", handleProductRemoved)
 		app.listen(PORT, () => {
-			logger.info(`Media service running on port ${PORT}`)
+			logger.info(`Search service running on port ${PORT}`)
 		})
 	} catch (e) {
-		logger.error("Failed to connect to server ", e)
+		logger.error("Failed to start server:", e)
 		process.exit(1)
 	}
 }
@@ -120,5 +122,5 @@ async function startServer() {
 startServer()
 
 process.on("unhandledRejection", (reason, promise) => {
-	logger.error("Unhandled Rejection at:", promise, "reason:", reason)
+	logger.error("Unhandled rejection", { promise, reason })
 })

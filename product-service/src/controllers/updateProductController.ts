@@ -32,11 +32,6 @@ export const updateProduct = async (req: Request, res: Response) => {
 				.json({ success: false, message: "Product not found" })
 		}
 
-		const existingMediaIds = [
-			existingProduct.mainImageId,
-			...existingProduct.variants.map((v) => v.imageId),
-		]
-
 		const mediaIdsToDelete: string[] = []
 
 		if ("mainImageId" in value) {
@@ -69,7 +64,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 		// Only compute mediaIdsToDelete if user explicitly provided mainImageId or variants
 		if (mediaIdsToDelete.length > 0) {
-			await publishEvent("product.removed", { mediaIds: mediaIdsToDelete })
+			await publishEvent("media.removed", { mediaIds: mediaIdsToDelete })
 		}
 
 		// Update product
@@ -153,6 +148,13 @@ export const updateProduct = async (req: Request, res: Response) => {
 			where: { id },
 			data: updateData,
 			include: { variants: true, properties: true, discount: true },
+		})
+
+		await publishEvent("product.updated", {
+			productId: updatedProduct.id,
+			name: updatedProduct.name,
+			shortDesc: updatedProduct.shortDesc,
+			updatedAt: updatedProduct.updatedAt,
 		})
 
 		logger.info("Product updated successfully", {

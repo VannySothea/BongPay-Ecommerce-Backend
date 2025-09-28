@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import prisma from "../prismaClient"
 import logger from "../utils/logger"
 import { validateAddProduct } from "../utils/validation"
+import { publishEvent } from "../utils/rabbitmq"
 
 export const addProduct = async (req: Request, res: Response) => {
 	logger.info("Adding a new product endpoint hit")
@@ -72,6 +73,12 @@ export const addProduct = async (req: Request, res: Response) => {
 				properties: true,
 				variants: true,
 			},
+		})
+
+		await publishEvent("product.added", {
+			productId: newProduct.id,
+			name: newProduct.name,
+			shortDesc: newProduct.shortDesc,
 		})
 
 		logger.info("Product added successfully", { productId: newProduct.id })
