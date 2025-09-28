@@ -33,6 +33,7 @@ export const removeProduct = async (req: Request, res: Response) => {
 				existingProduct.mainImageId,
 				...existingProduct.variants.map((v) => v.imageId),
 			],
+			productId: existingProduct.id,
 		})
 
 		logger.info("Product removed successfully", { productId: id })
