@@ -12,7 +12,7 @@ import logger from "./utils/logger"
 import errorHandler from "./middleware/errorHandler"
 import { connectDB } from "./prismaClient"
 import router from "./routes/mediaRoutes"
-import { consumeEvent } from "./utils/rabbitmq"
+import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq"
 import { handleMediaRemoved } from "./eventHandlers/media-event-handlers"
 
 const app = express()
@@ -105,7 +105,7 @@ app.use(errorHandler)
 async function startServer() {
 	try {
 		await connectDB()
-		
+		await connectToRabbitMQ()
 		await consumeEvent("product.removed", handleMediaRemoved)
 		app.listen(PORT, () => {
 			logger.info(`Media service running on port ${PORT}`)
