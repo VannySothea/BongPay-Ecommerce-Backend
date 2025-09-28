@@ -12,6 +12,7 @@ import logger from "./utils/logger"
 import errorHandler from "./middleware/errorHandler"
 import router from "./routes/productRoutes"
 import { connectDB } from "./prismaClient"
+import { connectToRabbitMQ } from "./utils/rabbitmq"
 
 const app = express()
 const PORT = process.env.PORT || 3002
@@ -104,11 +105,13 @@ app.use(errorHandler)
 async function startServer() {
 	try {
 		await connectDB()
+		await connectToRabbitMQ()
 		app.listen(PORT, () => {
 			logger.info(`Product service running on port ${PORT}`)
 		})
 	} catch (e) {
 		logger.error("Failed to start server:", e)
+		process.exit(1)
 	}
 }
 

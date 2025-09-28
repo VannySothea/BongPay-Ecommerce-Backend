@@ -1,5 +1,5 @@
 {
-	"name": "product-service",
+	"name": "media-service",
 	"version": "1.0.0",
 	"description": "",
 	"main": "server.ts",
@@ -11,7 +11,7 @@
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"packageManager": "pnpm@10.15.0",
+	"type": "commonjs",
 	"devDependencies": {
 		"@types/amqplib": "^0.10.7",
 		"@types/cookie-parser": "^1.4.9",
@@ -22,7 +22,7 @@
 		"@types/ioredis": "^5.0.0",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/multer": "^2.0.0",
-		"@types/node": "^24.3.0",
+		"@types/node": "^24.5.2",
 		"prisma": "^6.15.0",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "^5.9.2"
