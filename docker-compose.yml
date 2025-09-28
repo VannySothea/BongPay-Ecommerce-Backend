@@ -30,6 +30,15 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
 
+  media-service:
+    build: ./media-service
+    env_file: ./media-service/.env
+    depends_on:
+      - redis
+    restart: always
+    environment:
+      - REDIS_URL=redis://redis:6379
+
   redis:
     image: redis:alpine
     ports: 
