@@ -43,5 +43,5 @@ COPY --from=build /usr/src/app/dist ./dist
 # Copy Prisma schema (optional, for migrations)
 COPY prisma ./prisma
 
-EXPOSE 3002
+EXPOSE 3004
 CMD ["node", "dist/server.js"]

@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /usr/src/app
 
@@ -27,26 +27,21 @@ RUN pnpm exec tsc
 
 
 # Stage 2: Production
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
 # Install pnpm
 RUN npm install -g pnpm@10.15.0
 
-# Copy only production dependencies
-COPY package*.json pnpm-lock.yaml ./
+# Copy all node_modules from build stage (includes Prisma client)
+COPY --from=build /usr/src/app/node_modules ./node_modules
 
-# Install only production dependencies
-RUN pnpm install --prod
-
-# Copy compiled JS from build stage
+# Copy compiled JS
 COPY --from=build /usr/src/app/dist ./dist
 
-# Copy generated Prisma client (inside src/generated)
-COPY --from=build /usr/src/app/src/generated ./src/generated
+# Copy Prisma schema (optional, for migrations)
+COPY prisma ./prisma
 
 EXPOSE 3001
-
-# Start the application
 CMD ["node", "dist/server.js"]
