@@ -150,6 +150,29 @@ app.use(
 	})
 )
 
+if (!process.env.SEARCH_SERVICE_URL) {
+	logger.error("SEARCH_SERVICE_URL is not defined")
+	process.exit(1)
+}
+
+app.use(
+	"/v1/search",
+	captureUrl,
+	createProxy(process.env.SEARCH_SERVICE_URL, "search service")
+)
+
+if (!process.env.CART_SERVICE_URL) {
+	logger.error("CART_SERVICE_URL is not defined")
+	process.exit(1)
+}
+
+app.use(
+	"/v1/cart",
+	captureUrl,
+	validationToken,
+	createProxy(process.env.CART_SERVICE_URL, "cart service")
+)
+
 app.use(errorHandler)
 app.get("/ping", (req, res) => {
 	res.json({ message: "PONG" })
@@ -167,6 +190,12 @@ async function startServer() {
 			)
 			logger.info(
 				`Media service proxy target: ${process.env.MEDIA_SERVICE_URL}`
+			)
+			logger.info(
+				`Search service proxy target: ${process.env.SEARCH_SERVICE_URL}`
+			)
+			logger.info(
+				`Cart service proxy target: ${process.env.CART_SERVICE_URL}`
 			)
 		})
 	} catch (e) {
