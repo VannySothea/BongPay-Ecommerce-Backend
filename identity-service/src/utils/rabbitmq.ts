@@ -4,7 +4,6 @@ import logger from "./logger"
 let connection: any = null
 let channels: Record<string, amqp.Channel> = {};
 
-
 export const connectToRabbitMQ = async (): Promise<amqp.Connection> => {
   if (connection) return connection;
 
@@ -33,7 +32,6 @@ export const getChannelForExchange = async (
   logger.info(`Channel created for exchange: ${exchangeName}`);
   return channel;
 };
-
 
 export const publishEvent = async (
   exchangeName: string,

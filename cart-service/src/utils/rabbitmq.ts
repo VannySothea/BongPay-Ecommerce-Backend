@@ -2,64 +2,63 @@ import amqp from "amqplib"
 import logger from "./logger"
 
 let connection: any = null
-let channel: any = null
+let channels: Record<string, amqp.Channel> = {};
 
-const EXCHANGE_NAME = "product_events"
+export const connectToRabbitMQ = async (): Promise<amqp.Connection> => {
+  if (connection) return connection;
 
-export const connectToRabbitMQ = async (): Promise<any> => {
-	if (channel) return channel // already connected
+  try {
+    connection = await amqp.connect(process.env.RABBITMQ_URL as string);
+    logger.info("Connected to RabbitMQ");
+    return connection;
+  } catch (error) {
+    logger.error("Error connecting to RabbitMQ:", error);
+    throw error;
+  }
+};
 
-	try {
-		if (!connection) {
-			connection = await amqp.connect(process.env.RABBITMQ_URL as string)
-		}
+export const getChannelForExchange = async (
+  exchangeName: string,
+  type: "topic" | "fanout" | "direct" = "topic",
+  durable = false
+): Promise<amqp.Channel> => {
+  if (channels[exchangeName]) return channels[exchangeName];
 
-		channel = await connection.createChannel()
-		await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: false })
-		logger.info("Connected to RabbitMQ")
+  await connectToRabbitMQ();
+  const channel = await connection.createChannel();
+  await channel.assertExchange(exchangeName, type, { durable });
 
-		return channel
-	} catch (error) {
-		logger.error("Error connecting to RabbitMQ:", error)
-		throw error
-	}
-}
+  channels[exchangeName] = channel;
+  logger.info(`Channel created for exchange: ${exchangeName}`);
+  return channel;
+};
 
 export const publishEvent = async (
-	routingKey: string,
-	message: unknown
-): Promise<void> => {
-	if (!channel) {
-		await connectToRabbitMQ()
-	}
-
-	// Non-null assertion because connectToRabbitMQ ensures channel exists
-	channel!.publish(
-		EXCHANGE_NAME,
-		routingKey,
-		Buffer.from(JSON.stringify(message))
-	)
-	logger.info(`Event published: ${routingKey}`)
-}
+  exchangeName: string,
+  routingKey: string,
+  message: unknown
+) => {
+  const channel = await getChannelForExchange(exchangeName);
+  channel.publish(exchangeName, routingKey, Buffer.from(JSON.stringify(message)));
+  logger.info(`Event published: ${exchangeName} -> ${routingKey}`);
+};
 
 export const consumeEvent = async (
-	routingKey: string,
-	callback: (msg: any) => void
-): Promise<void> => {
-	if (!channel) {
-		await connectToRabbitMQ()
-	}
-  const q = await channel.assertQueue("", {exclusive: true})
+  exchangeName: string,
+  routingKey: string,
+  callback: (msg: any) => void
+) => {
+  const channel = await getChannelForExchange(exchangeName);
+  const q = await channel.assertQueue("", { exclusive: true });
+  await channel.bindQueue(q.queue, exchangeName, routingKey);
 
-  await channel.bindQueue(q.queue, EXCHANGE_NAME, routingKey)
-
-  channel.consume(q.queue, (msg: any) => {
+  channel.consume(q.queue, (msg) => {
     if (msg !== null) {
-      const content = JSON.parse(msg.content.toString())
-      callback(content)
-      channel.ack(msg)
+      const content = JSON.parse(msg.content.toString());
+      callback(content);
+      channel.ack(msg);
     }
-  })
+  });
 
-  logger.info(`Subscribed to event: ${routingKey}`)
-}
+  logger.info(`Subscribed to event: ${exchangeName} -> ${routingKey}`);
+};

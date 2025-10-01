@@ -75,7 +75,7 @@ export const addProduct = async (req: Request, res: Response) => {
 			},
 		})
 
-		await publishEvent("product.added", {
+		await publishEvent("product_events", "product.added", {
 			productId: newProduct.id,
 			name: newProduct.name,
 			shortDesc: newProduct.shortDesc,
@@ -84,7 +84,7 @@ export const addProduct = async (req: Request, res: Response) => {
 		logger.info("Product added successfully", { productId: newProduct.id })
 		return res.status(201).json({ success: true, product: newProduct })
 	} catch (error) {
-		logger.error("Error adding product", { error })
+		logger.error("Error adding product", error)
 		return res
 			.status(500)
 			.json({ success: false, message: "Internal Server Error" })

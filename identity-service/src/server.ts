@@ -12,6 +12,7 @@ import logger from "./utils/logger"
 import errorHandler from "./middleware/errorHandler"
 import router from "./routes/auth-service"
 import { connectDB } from "./prismaClient"
+import { connectToRabbitMQ } from "./utils/rabbitmq"
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -106,6 +107,7 @@ app.use(errorHandler)
 async function startServer() {
 	try {
 		await connectDB()
+		await connectToRabbitMQ()
 		app.listen(PORT, () => {
 			logger.info(`Identity service running on port ${PORT}`)
 		})

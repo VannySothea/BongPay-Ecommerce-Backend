@@ -106,8 +106,8 @@ async function startServer() {
 	try {
 		await connectDB()
 		await connectToRabbitMQ()
-		await consumeEvent("media.removed", handleMediaRemoved)
-		await consumeEvent("product.removed", handleMediaRemoved)
+		await consumeEvent("product_events", "media.removed", handleMediaRemoved)
+		await consumeEvent("product_events", "product.removed", handleMediaRemoved)
 		app.listen(PORT, () => {
 			logger.info(`Media service running on port ${PORT}`)
 		})

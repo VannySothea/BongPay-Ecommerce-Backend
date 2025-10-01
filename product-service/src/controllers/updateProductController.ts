@@ -64,7 +64,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 		// Only compute mediaIdsToDelete if user explicitly provided mainImageId or variants
 		if (mediaIdsToDelete.length > 0) {
-			await publishEvent("media.removed", { mediaIds: mediaIdsToDelete })
+			await publishEvent("product_events", "media.removed", { mediaIds: mediaIdsToDelete })
 		}
 
 		// Update product
@@ -150,7 +150,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 			include: { variants: true, properties: true, discount: true },
 		})
 
-		await publishEvent("product.updated", {
+		await publishEvent("product_events", "product.updated", {
 			productId: updatedProduct.id,
 			name: updatedProduct.name,
 			shortDesc: updatedProduct.shortDesc,

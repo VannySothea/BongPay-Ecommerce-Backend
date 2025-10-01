@@ -5,6 +5,7 @@ import {
 	validateVerificationToken,
 } from "../utils/validation"
 import { Request, Response } from "express"
+import { publishEvent } from "../utils/rabbitmq"
 
 export const verifyAccount = async (req: Request, res: Response) => {
 	logger.info("Verify account endpoint hit")
@@ -76,6 +77,10 @@ export const verifyAccount = async (req: Request, res: Response) => {
 				twoFactorCode: null,
 				twoFactorExp: null,
 			},
+		})
+
+		await publishEvent("user_events", "user.verified", {
+			userId: user.id
 		})
 
 		res.clearCookie("verificationToken")

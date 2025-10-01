@@ -28,7 +28,7 @@ export const removeProduct = async (req: Request, res: Response) => {
 			where: { id },
 		})
 
-		await publishEvent("product.removed", {
+		await publishEvent("product_events", "product.removed", {
 			mediaIds: [
 				existingProduct.mainImageId,
 				...existingProduct.variants.map((v) => v.imageId),

@@ -10,9 +10,10 @@ import { RedisReply, RedisStore } from "rate-limit-redis"
 import cookieParser from "cookie-parser"
 import logger from "./utils/logger"
 import errorHandler from "./middleware/errorHandler"
-import router from './routes/searchRoutes';
+import router from './routes/cartRoutes';
 import { connectDB } from "./prismaClient"
 import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq" 
+import { handleCartCreated, handleCartItemRemoved } from './eventHandlers/cart-event-handlers';
 
 const app = express()
 const PORT = process.env.PORT
@@ -106,8 +107,8 @@ async function startServer() {
 	try {
 		await connectDB()
 		await connectToRabbitMQ()
-        // await consumeEvent("product.updated", handleProductUpdated)
-        // await consumeEvent("product.removed", handleProductRemoved)
+        await consumeEvent("user_events", "user.verified", handleCartCreated)
+		await consumeEvent("product_events", "product.removed", handleCartItemRemoved)
 		app.listen(PORT, () => {
 			logger.info(`Cart service running on port ${PORT}`)
 		})
