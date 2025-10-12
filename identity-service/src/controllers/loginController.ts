@@ -37,10 +37,7 @@ export const loginUser = async (req: Request, res: Response) => {
 				.json({ success: false, message: "Invalid password" })
 		}
 
-		const { accessToken, refreshToken } = await generateTokens(
-			res,
-			user as User
-		)
+		await generateTokens(res, user as User)
 		logger.info("User logged in successfully", { userId: user.id })
 
 		return res.status(200).json({
@@ -51,9 +48,7 @@ export const loginUser = async (req: Request, res: Response) => {
 				firstName: user.firstName,
 				lastName: user.lastName,
 				email: user.email,
-			},
-			accessToken,
-			refreshToken,
+			}
 		})
 	} catch (err) {
 		logger.error("Error logging in user", err)

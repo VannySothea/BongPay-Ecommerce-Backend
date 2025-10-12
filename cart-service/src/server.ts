@@ -13,7 +13,7 @@ import errorHandler from "./middleware/errorHandler"
 import router from './routes/cartRoutes';
 import { connectDB } from "./prismaClient"
 import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq" 
-import { handleCartCreated, handleCartItemRemoved } from './eventHandlers/cart-event-handlers';
+import { handleCartCreated, handleCartEmptied, handleCartItemRemoved } from './eventHandlers/cart-event-handlers';
 
 const app = express()
 const PORT = process.env.PORT
@@ -109,6 +109,7 @@ async function startServer() {
 		await connectToRabbitMQ()
         await consumeEvent("user_events", "user.verified", handleCartCreated)
 		await consumeEvent("product_events", "product.removed", handleCartItemRemoved)
+		await consumeEvent("cart_events", "cart.empty.requested", handleCartEmptied)
 		app.listen(PORT, () => {
 			logger.info(`Cart service running on port ${PORT}`)
 		})

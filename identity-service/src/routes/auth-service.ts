@@ -7,11 +7,12 @@ import { logoutUser } from "../controllers/logoutController"
 import { forgotPasswordUser } from "../controllers/forgotPasswordController"
 import { verifyResetPassword } from "../controllers/verifyResetPasswordController"
 import { resetPasswordUser } from "../controllers/resetPasswordController"
-import { verificationCodeResend } from "../controllers/verificationCodeResendController"
-import { verificationResetPasswordResend } from "../controllers/verificationResetPasswordResendController"
+import { verifyAccountCodeResend } from "../controllers/verifyAccountCodeResendController"
+import { verifyResetPasswordCodeResend } from "../controllers/verifyResetPasswordCodeResendController"
 import {
 	authenticateRequest,
 	authorizeRoles,
+	verifyVerificationToken,
 } from "../middleware/authMiddleware"
 
 const router = express.Router()
@@ -34,16 +35,17 @@ router.get(
 )
 router.post("/register", registerUser)
 router.post("/login", loginUser)
-router.post("/verify-account", verifyAccount)
-router.post("/verify-account/resend-code", verificationCodeResend)
+router.post("/verify-account", verifyVerificationToken(), verifyAccount)
+router.post("/verify-account/resend-code", verifyVerificationToken(), verifyAccountCodeResend)
 router.post("/forgot-password", forgotPasswordUser)
-router.post("/verify-reset-password", verifyResetPassword)
+router.post("/verify-reset-password", verifyVerificationToken(), verifyResetPassword)
 router.post(
 	"/verify-reset-password/resend-code",
-	verificationResetPasswordResend
+	verifyVerificationToken(),
+	verifyResetPasswordCodeResend
 )
 router.post("/refresh-token", refreshTokenUser)
 router.post("/logout", authenticateRequest, logoutUser)
-router.put("/reset-password", resetPasswordUser)
+router.put("/reset-password", verifyVerificationToken("resetPasswordToken"), resetPasswordUser)
 
 export default router

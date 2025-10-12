@@ -3,8 +3,7 @@ import prisma from "../prismaClient"
 import { sendPasswordResetEmail } from "../mail/email"
 import { validateForgotPasswordRequest } from "../utils/validation"
 import { Request, Response } from "express"
-import { generateResetPasswordToken } from "../utils/generateToken"
-import { User } from "../types/types"
+import { generateVerificationToken } from "../utils/generateToken"
 
 export const forgotPasswordUser = async (req: Request, res: Response) => {
 	logger.info("Forgot password request endpoint hit")
@@ -18,13 +17,6 @@ export const forgotPasswordUser = async (req: Request, res: Response) => {
 				.json({ success: false, message: error.details[0].message })
 		}
 
-		if (!email) {
-			logger.error("Email not provided")
-			return res
-				.status(400)
-				.json({ success: false, message: "Email not provided" })
-		}
-
 		const user = await prisma.user.findUnique({
 			where: { email },
 		})
@@ -32,6 +24,12 @@ export const forgotPasswordUser = async (req: Request, res: Response) => {
 		if (!user) {
 			logger.error("User not found")
 			return res.status(404).json({ success: false, message: "User not found" })
+		}
+		if (user.isVerified === false) {
+			logger.error("Account not verified")
+			return res
+				.status(400)
+				.json({ success: false, message: "User not found" })
 		}
 
 		const twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString()
@@ -44,7 +42,7 @@ export const forgotPasswordUser = async (req: Request, res: Response) => {
 			},
 		})
 
-		await generateResetPasswordToken(res, user as User)
+		await generateVerificationToken(res, user.id, user.email)
 		await sendPasswordResetEmail(user.email, twoFactorCode)
 
 		logger.info("Forgot password request successful", { userId: user.id })

@@ -6,6 +6,11 @@ export const authenticateRequest = (
 	res: Response,
 	next: NextFunction
 ) => {
+	// Allow internal service-to-service call
+	if (req.headers["x-internal-secret"] === process.env.INTERNAL_SECRET) {
+		return next()
+	}
+
 	const userIdHeader = req.headers["x-user-id"]
 	const roleHeader = req.headers["x-user-role"]
 	if (

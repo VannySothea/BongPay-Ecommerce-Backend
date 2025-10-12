@@ -11,22 +11,33 @@ datasource db {
 model Order {
   id          Int       @id @default(autoincrement())
   userId      Int
-  totalAmount Float
-  status      String    @default("PENDING") // PENDING, PAID, SHIPPED, CANCELLED
+  totalAmount Decimal @db.Decimal(10, 2)
+  paid Boolean @default(false)
+  status      OrderStatus @default(PENDING)
+  transactionId String?
+  shippingAddress   Address?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   items       OrderItem[]
 }
 
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  CANCELLED
+  DELIVERED
+  EXPIRED
+}
+
 model OrderItem {
   id        Int     @id @default(autoincrement())
   orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId Int
 
   productName String
   productShortDesc     String
-  productMainImageId   String @unique
+  productMainImageId   String
   productPrice Float
   properties    ProductProperty[]
 
@@ -43,3 +54,13 @@ model ProductProperty {
   orderItem       OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
 }
 
+model Address {
+  id Int @id @default(autoincrement())
+  orderId   Int @unique
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  phone String
+  street String
+  city String
+  postalCode String
+  country String
+}

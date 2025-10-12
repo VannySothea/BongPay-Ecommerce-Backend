@@ -6,7 +6,6 @@ import {
 	RegistrationData,
 	ResetPasswordData,
 	TwoFactorCodeData,
-	VerificationTokenData,
 } from "../types/types"
 
 export const validateRegistration = (data: RegistrationData) => {
@@ -54,14 +53,6 @@ export const validateTwoFactorCode = (data: TwoFactorCodeData) => {
 }
 
 export const validateRefreshToken = (data: RefreshTokenData) => {
-	const schema = Joi.object({
-		token: Joi.string().required(),
-	})
-
-	return schema.validate(data)
-}
-
-export const validateVerificationToken = (data: VerificationTokenData) => {
 	const schema = Joi.object({
 		token: Joi.string().required(),
 	})

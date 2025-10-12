@@ -54,7 +54,7 @@ export const registerUser = async (
 			},
 		})
 
-		await generateVerificationToken(res, user.id)
+		await generateVerificationToken(res, user.id, user.email)
 		await sendVerificationEmail(user.email, twoFactorCode)
 
 		logger.info("User registered successfully", { userId: user.id })

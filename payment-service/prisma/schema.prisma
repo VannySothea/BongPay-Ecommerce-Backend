@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+  orderId Int @unique()
+  userId Int
+  method PaymentMethod @default(COD)
+  status PaymentStatus @default(UNPAID)
+  provider PaymentProvider @default(COD)
+  amount Decimal @db.Decimal(10, 2)
+  currency Currency @default(USD) 
+  transactionId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Currency {
+  KHR
+  USD
+}
+
+enum PaymentMethod {
+  COD
+  CREDIT_CARD
+  BANK_TRANSFER
+  E_WALLET
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  CANCELLED
+  REFUNDED
+  FAILED
+}
+
+enum PaymentProvider {
+  COD
+  ABA_PAY
+  VISA
+  MASTER
+  PAYPAL
+}
