@@ -45,6 +45,7 @@ export interface checkoutData {
 	currency: Currency,
 	shippingAddress: {
 		phone: string,
+		email: string,
 		street: string
 		city: string
 		postalCode: string

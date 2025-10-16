@@ -8,6 +8,7 @@ export const validateCheckout = (data: checkoutData) => {
 		currency: Joi.string().valid("USD", "KHR").required(),
 		shippingAddress: Joi.object({
 			phone: Joi.string().min(7).max(15).required(),
+			email: Joi.string().email().required(),
 			street: Joi.string().min(2).max(100).required(),
 			city: Joi.string().min(2).max(100).required(),
 			postalCode: Joi.string().min(2).max(10).required(),

@@ -17,7 +17,7 @@ model Payment {
   provider PaymentProvider @default(COD)
   amount Decimal @db.Decimal(10, 2)
   currency Currency @default(USD) 
-  transactionId String
+  transactionId String @unique()
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

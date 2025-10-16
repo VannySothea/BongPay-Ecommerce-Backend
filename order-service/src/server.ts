@@ -13,7 +13,7 @@ import errorHandler from "./middleware/errorHandler"
 import router from './routes/orderRoutes';
 import { connectDB } from "./prismaClient"
 import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq" 
-import { handlePaymentProcessed } from './event-handlers/payment-event-hadlers';
+import { handlePaymentProcessed } from './event-handlers/payment-event-handlers';
 
 const app = express()
 const PORT = process.env.PORT

@@ -36,4 +36,7 @@ router.delete(
 router.get("/all", getAllProduct)
 router.get("/:id", getProductDetail)
 
+// Internal route
+router.get("/internal/:id", authenticateRequest, getProductDetail)
+
 export default router

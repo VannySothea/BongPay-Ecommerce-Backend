@@ -7,6 +7,7 @@ import axios from "axios"
 export const addToCart = async (req: Request, res: Response) => {
 	logger.info("Add to cart endpoint hit")
 	const { userId } = req.user as { userId: number }
+	const productId = parseInt(req.params.productId)
 	const { error, value } = validateAddToCart(req.body)
 	if (error) {
 		logger.error(`Validation error: ${error.details[0].message}`)
@@ -15,11 +16,16 @@ export const addToCart = async (req: Request, res: Response) => {
 
 	try {
 		const productRes = await axios.get(
-			`${process.env.PRODUCT_SERVICE_URL}/product/${value.productId}`
+			`${process.env.PRODUCT_SERVICE_URL}/internal/${productId}`,
+			{
+				headers: {
+					"x-internal-secret": process.env.INTERNAL_SECRET,
+				},
+			}
 		)
 
 		if (!productRes.data.product) {
-			logger.error(`Product with ID ${value.productId} not found`)
+			logger.error(`Product with ID ${productId} not found`)
 			return res.status(404).json({ message: "Product not found" })
 		}
 
@@ -44,24 +50,25 @@ export const addToCart = async (req: Request, res: Response) => {
 		const existingItem = await prisma.cartItem.findFirst({
 			where: {
 				cartId: cart.id,
-				productId: value.productId,
+				productId: productId,
 			},
 		})
 
 		if (existingItem) {
 			logger.info(
-				`Updating quantity for product ${value.productId} in user ${userId}'s cart`
+				`Updating quantity for product ${existingItem.id} in user ${userId}'s cart`
 			)
 			await prisma.cartItem.update({
 				where: { id: existingItem.id },
 				data: { quantity: existingItem.quantity + value.quantity },
 			})
+			logger.info(`Product ${existingItem.id} updated in cart successfully`)
 		} else {
-			logger.info(`Adding product ${value.productId} to user ${userId}'s cart`)
-			await prisma.cartItem.create({
+			logger.info(`Adding product ${productId} to user ${userId}'s cart`)
+			const newItem = await prisma.cartItem.create({
 				data: {
 					cartId: cart.id,
-					productId: value.productId,
+					productId: productId,
 					productName: name,
 					productShortDesc: shortDesc,
 					productMainImageId: mainImageId,
@@ -77,9 +84,9 @@ export const addToCart = async (req: Request, res: Response) => {
 					: undefined,
 				},
 			})
+			logger.info(`Product ${newItem.id} added to cart successfully`)
 		}
 
-        logger.info(`Product ${value.productId} added/updated in cart successfully`)
 		return res
 			.status(200)
 			.json({ success: true, message: "Product added to cart" })

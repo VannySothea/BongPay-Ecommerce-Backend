@@ -107,7 +107,7 @@ async function startServer() {
 	try {
 		await connectDB()
 		await connectToRabbitMQ()
-		await consumeEvent("order_events", "order.checkout", handleOrderCheckout)
+		await consumeEvent("order.service", "order.checkout", handleOrderCheckout)
 		app.listen(PORT, () => {
 			logger.info(`Payment service running on port ${PORT}`)
 		})

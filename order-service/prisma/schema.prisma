@@ -14,7 +14,7 @@ model Order {
   totalAmount Decimal @db.Decimal(10, 2)
   paid Boolean @default(false)
   status      OrderStatus @default(PENDING)
-  transactionId String?
+  transactionId String? @unique()
   shippingAddress   Address?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -59,6 +59,7 @@ model Address {
   orderId   Int @unique
   order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   phone String
+  email String
   street String
   city String
   postalCode String

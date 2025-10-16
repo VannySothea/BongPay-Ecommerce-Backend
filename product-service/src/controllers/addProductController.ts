@@ -75,7 +75,7 @@ export const addProduct = async (req: Request, res: Response) => {
 			},
 		})
 
-		await publishEvent("product_events", "product.added", {
+		await publishEvent("product.service", "product.added", {
 			productId: newProduct.id,
 			name: newProduct.name,
 			shortDesc: newProduct.shortDesc,

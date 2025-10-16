@@ -1,11 +1,11 @@
 import logger from "../utils/logger"
 import prisma from "../prismaClient"
 import argon2 from "argon2"
-import { sendVerificationEmail } from "../mail/email"
 import { validateRegistration } from "../utils/validation"
 import { RegistrationData } from "../types/types"
 import { Request, Response } from "express"
 import { generateVerificationToken } from "../utils/generateToken"
+import { publishEvent } from "../utils/rabbitmq"
 
 export const registerUser = async (
 	req: Request<{}, {}, RegistrationData>,
@@ -48,14 +48,17 @@ export const registerUser = async (
 				lastName: lastName,
 				email: email,
 				password: hashedPassword,
-				role: email === "v.sothea.personal@gmail.com" ? "ADMIN" : "USER",
+				role: email === process.env.ADMIN_ACCOUNT ? "ADMIN" : "USER",
 				twoFactorCode,
 				twoFactorExp: new Date(Date.now() + 3 * 60 * 1000), // 3 minutes from current
 			},
 		})
 
 		await generateVerificationToken(res, user.id, user.email)
-		await sendVerificationEmail(user.email, twoFactorCode)
+		await publishEvent("identity.service", "user.registered", {
+			email: user.email,
+			code: twoFactorCode,
+		})
 
 		logger.info("User registered successfully", { userId: user.id })
 

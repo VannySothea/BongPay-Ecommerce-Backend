@@ -1,15 +1,10 @@
 import logger from "../utils/logger"
 import prisma from "../prismaClient"
 import argon2 from "argon2"
-import {
-	sendResetSuccessEmail,
-} from "../mail/email"
-import {
-	validateResetPassword,
-} from "../utils/validation"
+import { validateResetPassword } from "../utils/validation"
 import { Request, Response } from "express"
 import { revokeVerificationToken } from "../middleware/authMiddleware"
-
+import { publishEvent } from "../utils/rabbitmq"
 
 export const resetPasswordUser = async (req: Request, res: Response) => {
 	logger.info("Reset password endpoint hit")
@@ -37,9 +32,7 @@ export const resetPasswordUser = async (req: Request, res: Response) => {
 
 		if (!user.isVerified) {
 			logger.error("User account is not verified")
-			return res
-				.status(400)
-				.json({ success: false, message: "User not found" })
+			return res.status(400).json({ success: false, message: "User not found" })
 		}
 
 		if (!newPassword) {
@@ -60,9 +53,11 @@ export const resetPasswordUser = async (req: Request, res: Response) => {
 			},
 		})
 
-		await sendResetSuccessEmail(user.email)
+		await publishEvent("identity.service", "user.reset_password.successful", {
+			email: user.email,
+		})
 		await revokeVerificationToken(res, "resetPasswordToken")
-		
+
 		logger.info("Password reset successful", { userId: user.id })
 		return res.status(200).json({
 			success: true,

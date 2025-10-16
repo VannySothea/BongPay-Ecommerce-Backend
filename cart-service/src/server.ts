@@ -107,9 +107,9 @@ async function startServer() {
 	try {
 		await connectDB()
 		await connectToRabbitMQ()
-        await consumeEvent("user_events", "user.verified", handleCartCreated)
-		await consumeEvent("product_events", "product.removed", handleCartItemRemoved)
-		await consumeEvent("cart_events", "cart.empty.requested", handleCartEmptied)
+        await consumeEvent("identity.service", "user.verified", handleCartCreated)
+		await consumeEvent("product.service", "product.removed", handleCartItemRemoved)
+		await consumeEvent("order.service", "order.checkout", handleCartEmptied)
 		app.listen(PORT, () => {
 			logger.info(`Cart service running on port ${PORT}`)
 		})

@@ -1,10 +1,13 @@
 import logger from "../utils/logger"
 import prisma from "../prismaClient"
-import { sendVerificationEmail } from "../mail/email"
 import { Request, Response } from "express"
 import { generateVerificationToken } from "../utils/generateToken"
+import { publishEvent } from "../utils/rabbitmq"
 
-export const verifyResetPasswordCodeResend = async (req: Request, res: Response) => {
+export const verifyResetPasswordCodeResend = async (
+	req: Request,
+	res: Response
+) => {
 	logger.info("Resend verification code request endpoint hit")
 	try {
 		const { userId } = req.user as { userId: number }
@@ -20,9 +23,7 @@ export const verifyResetPasswordCodeResend = async (req: Request, res: Response)
 
 		if (!user.isVerified) {
 			logger.error("User account is not verified")
-			return res
-				.status(400)
-				.json({ success: false, message: "User not found" })
+			return res.status(400).json({ success: false, message: "User not found" })
 		}
 
 		const twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString()
@@ -36,7 +37,10 @@ export const verifyResetPasswordCodeResend = async (req: Request, res: Response)
 		})
 
 		await generateVerificationToken(res, user.id, user.email)
-		await sendVerificationEmail(user.email, twoFactorCode)
+		await publishEvent("identity.service", "user.forgot_password", {
+			email: user.email,
+			code: twoFactorCode,
+		})
 
 		logger.info("Resend verification code request successful", {
 			userId: user.id,

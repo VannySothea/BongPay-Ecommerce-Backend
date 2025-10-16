@@ -3,8 +3,8 @@ import {
 	PASSWORD_RESET_REQUEST_TEMPLATE,
 	PASSWORD_RESET_SUCCESS_TEMPLATE,
 	VERIFICATION_EMAIL_TEMPLATE,
-} from "./emailTemplates"
-import { transporter, sender } from "./mailConfig"
+} from "../templates/identity-service/emailTemplates"
+import { transporter, sender } from "../config/mailConfig"
 
 
 if (!process.env.MAIL_AUTH_USER) throw new Error("MAIL_AUTH_USER not set")

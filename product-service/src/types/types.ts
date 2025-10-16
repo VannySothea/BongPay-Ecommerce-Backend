@@ -76,3 +76,7 @@ export interface VariantInput {
 	propertyValues: string[]
 	img?: string | null
 }
+
+export interface ProductAddedToCartEvent {
+	productId: number
+}

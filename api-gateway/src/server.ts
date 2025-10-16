@@ -197,6 +197,18 @@ app.use(
 	createProxy(process.env.PAYMENT_SERVICE_URL, "payment service")
 )
 
+if (!process.env.NOTIFICATION_SERVICE_URL) {
+	logger.error("NOTIFICATION_SERVICE_URL is not defined")
+	process.exit(1)
+}
+
+app.use(
+	"/v1/notification",
+	captureUrl,
+	validationToken,
+	createProxy(process.env.NOTIFICATION_SERVICE_URL, "notification service")
+)
+
 app.use(errorHandler)
 app.get("/ping", (req, res) => {
 	res.json({ message: "PONG" })
@@ -226,6 +238,9 @@ async function startServer() {
 			)
 			logger.info(
 				`Payment service proxy target: ${process.env.PAYMENT_SERVICE_URL}`
+			)
+			logger.info(
+				`Notification service proxy target: ${process.env.NOTIFICATION_SERVICE_URL}`
 			)
 		})
 	} catch (e) {

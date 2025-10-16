@@ -1,8 +1,8 @@
 import logger from "../utils/logger"
 import prisma from "../prismaClient"
-import { sendVerificationEmail } from "../mail/email"
 import { Request, Response } from "express"
 import { generateVerificationToken } from "../utils/generateToken"
+import { publishEvent } from "../utils/rabbitmq"
 
 export const verifyAccountCodeResend = async (req: Request, res: Response) => {
 	logger.info("Resend verification code request endpoint hit")
@@ -36,7 +36,10 @@ export const verifyAccountCodeResend = async (req: Request, res: Response) => {
 		})
 
 		await generateVerificationToken(res, user.id, user.email)
-		await sendVerificationEmail(user.email, twoFactorCode)
+		await publishEvent("identity.service", "user.registered", {
+			email: user.email,
+			code: twoFactorCode,
+		})
 
 		logger.info("Resend verification code request successful", {
 			userId: user.id,

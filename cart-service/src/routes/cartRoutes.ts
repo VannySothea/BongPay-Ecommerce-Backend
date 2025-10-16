@@ -13,9 +13,11 @@ router.get("/ping", (req, res) => {
 })
 
 router.get("/", authenticateRequest, getCart)
-router.get("/:userId", authenticateRequest, getCartByUserId)
-router.post("/add", authenticateRequest, addToCart)
-router.put("/update", authenticateRequest, updateCartItem)
-router.delete("/remove", authenticateRequest, removeCartItem)
+router.post("/add/:productId", authenticateRequest, addToCart)
+router.put("/update/:cartItemId", authenticateRequest, updateCartItem)
+router.delete("/remove/:cartItemId", authenticateRequest, removeCartItem)
+
+// Internal routes
+router.get("/internal/:userId", authenticateRequest, getCartByUserId)
 
 export default router

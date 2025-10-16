@@ -6,7 +6,7 @@ import { publishEvent } from "../utils/rabbitmq"
 import { validateCheckout } from "../utils/validation"
 
 export const checkout = async (req: Request, res: Response) => {
-	logger.info("Create order endpoint hit")
+	logger.info("Create checkout endpoint hit")
 	const { userId } = req.user as { userId: number }
 	const { error, value } = validateCheckout(req.body)
 	if (error) {
@@ -15,7 +15,7 @@ export const checkout = async (req: Request, res: Response) => {
 	}
 	try {
 		const cartRes = await axios.get(
-			`${process.env.CART_SERVICE_URL}/cart/${userId}`,
+			`${process.env.CART_SERVICE_URL}/internal/${userId}`,
 			{
 				headers: {
 					"x-internal-secret": process.env.INTERNAL_SECRET,
@@ -61,6 +61,7 @@ export const checkout = async (req: Request, res: Response) => {
 				shippingAddress: {
 					create: {
 						phone: value.shippingAddress.phone,
+						email: value.shippingAddress.email,
 						street: value.shippingAddress.street,
 						city: value.shippingAddress.city,
 						postalCode: value.shippingAddress.postalCode,
@@ -78,10 +79,8 @@ export const checkout = async (req: Request, res: Response) => {
 			},
 		})
 
-		await publishEvent("cart_events", "cart.empty.requested", {
+		await publishEvent("order.service", "order.checkout", { 
 			cartId: cart.id,
-		})
-		await publishEvent("order_events", "order.checkout", { 
 			orderId: order.id,
 			userId: order.userId,
 			method: value.method,
@@ -97,7 +96,7 @@ export const checkout = async (req: Request, res: Response) => {
 			data: order,
 		})
 	} catch (error) {
-		logger.error("Error creating order", { error })
+		logger.error("Error creating checkout", { error })
 		return res
 			.status(500)
 			.json({ success: false, message: "Internal Server Error" })

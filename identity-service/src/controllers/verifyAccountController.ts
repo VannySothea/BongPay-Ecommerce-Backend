@@ -67,7 +67,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
 		})
 
 		
-		await publishEvent("user_events", "user.verified", {
+		await publishEvent("identity.service", "user.verified", {
 			userId: user.id
 		})
 		await revokeVerificationToken(res)
