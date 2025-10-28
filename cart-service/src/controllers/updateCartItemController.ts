@@ -6,6 +6,7 @@ import { validateUpdateCartItem } from "../utils/validation"
 export const updateCartItem = async (req: Request, res: Response) => {
     logger.info("Update cart item endpoint hit")
     const { userId } = req.user as { userId: number }
+    const cartItemId = parseInt(req.params.cartItemId)
     const { error, value } = validateUpdateCartItem(req.body)
     if (error) {
         logger.error(`Validation error: ${error.details[0].message}`)
@@ -23,15 +24,15 @@ export const updateCartItem = async (req: Request, res: Response) => {
             })
         }
 
-        const existingItem = await prisma.cartItem.findFirst({
+        const existingItem = await prisma.cartItem.findUnique({
             where: {
+                id: cartItemId,
                 cartId: cart.id,
-                productId: value.productId,
             },
         })
 
         if (!existingItem) {
-            logger.error(`Product with ID ${value.productId} not found in cart`)
+            logger.error(`Product with ID ${cartItemId} not found in cart`)
             return res.status(404).json({ message: "Product not found in cart" })
         }
 
@@ -40,7 +41,7 @@ export const updateCartItem = async (req: Request, res: Response) => {
                 data: { quantity: value.quantity }, 
             })
 
-        logger.info(`Product ${value.productId} updated in cart successfully`)
+        logger.info(`Product ${cartItemId} updated in cart successfully`)
         return res
             .status(200)
             .json({ success: true, message: "Product updated in cart", product })

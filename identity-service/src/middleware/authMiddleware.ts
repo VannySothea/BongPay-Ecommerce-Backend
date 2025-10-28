@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { UserPayload } from "../types/types"
+import jwt from "jsonwebtoken"
+import logger from "../utils/logger"
 
 export const authenticateRequest = (
 	req: Request,
@@ -46,4 +48,37 @@ export const authorizeRoles = (...allowedRoles: string[]) => {
 		}
 		next()
 	}
+}
+
+export const verifyVerificationToken =
+	(tokenField: string = "verificationToken") =>
+	(req: Request, res: Response, next: NextFunction) => {
+		const token = req.cookies?.[tokenField]
+		if (!token) {
+			logger.warn("No verification token provided")
+			return res.status(401).json({
+				message: "Session expired or not verified.",
+			})
+		}
+
+		try {
+			const decoded = jwt.verify(token, process.env.JWT_SECRET as string)
+			req.user = decoded as UserPayload
+			next()
+		} catch (err) {
+			return res
+				.status(401)
+				.json({ message: "Invalid or expired verification token" })
+		}
+	}
+
+export const revokeVerificationToken = (
+	res: Response,
+	tokenField: string = "verificationToken"
+) => {
+	res.clearCookie(tokenField, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+	})
 }

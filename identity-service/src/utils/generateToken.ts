@@ -50,27 +50,20 @@ export const generateTokens = async (res: Response, user: User) => {
 
 export const generateVerificationToken = async (
 	res: Response,
-	userId: number
+	userId: number,
+	email: string
 ) => {
 	const verificationToken = jwt.sign(
-		{ userId },
+		{ userId, email },
 		process.env.JWT_SECRET as string,
 		{ expiresIn: "3m" }
 	)
-	const expiresAt = new Date()
-	expiresAt.setMinutes(expiresAt.getMinutes() + 10) // 10 minutes from now
-
-	await prisma.verificationToken.upsert({
-		where: { userId },
-		update: { token: verificationToken, expiresAt },
-		create: { token: verificationToken, userId, expiresAt },
-	})
 
 	res.cookie("verificationToken", verificationToken, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 		sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-		expires: new Date(Date.now() + 600000), // 10 minutes from now
+		expires: new Date(Date.now() + 180000), // 3 minutes from now
 	})
 
 	return verificationToken
@@ -91,12 +84,6 @@ export const generateResetPasswordToken = async (res: Response, user: User) => {
 	)
 	const expiresAt = new Date()
 	expiresAt.setMinutes(expiresAt.getMinutes() + 10) // 10 minutes from now
-
-	await prisma.resetPasswordToken.upsert({
-		where: { userId: user.id },
-		update: { token: resetPasswordToken, expiresAt },
-		create: { token: resetPasswordToken, userId: user.id, expiresAt },
-	})
 
 	res.cookie("resetPasswordToken", resetPasswordToken, {
 		httpOnly: true,

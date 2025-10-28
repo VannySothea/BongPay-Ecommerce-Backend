@@ -4,7 +4,6 @@ export interface UserPayload {
 }
 
 export interface CartItem {
-  productId: number
   quantity: number
 }
 

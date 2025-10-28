@@ -30,3 +30,17 @@ export const handleCartItemRemoved = async(event: CartItemEvent) => {
         logger.error("Error occurred while deleting cart item", { error })
     }
 } 
+
+export const handleCartEmptied = async(event: { cartId: number }) => {
+    logger.info(`Cart emptied event received for`, event)
+    try {
+        const deletedItems = await prisma.cartItem.deleteMany({
+            where: {
+                cartId: event.cartId
+            }
+        })
+        logger.info(`Cart items deleted: ${deletedItems.count}`)
+    } catch (error) {
+        logger.error("Error occurred while emptying cart", { error })
+    }
+}

@@ -2,22 +2,17 @@ import logger from "../utils/logger"
 import prisma from "../prismaClient"
 import {
 	validateTwoFactorCode,
-	validateVerificationToken,
 } from "../utils/validation"
 import { Request, Response } from "express"
 import { publishEvent } from "../utils/rabbitmq"
+import { revokeVerificationToken } from "../middleware/authMiddleware"
 
 export const verifyAccount = async (req: Request, res: Response) => {
 	logger.info("Verify account endpoint hit")
 	try {
-		const token = req.cookies?.verificationToken
 		const { code } = req.body
-
+		const { userId } = req.user as { userId: number }
 		const { error: twoFactorError } = validateTwoFactorCode({ code: code })
-		const { error: tokenError } = validateVerificationToken({
-			token: token,
-		})
-
 		if (twoFactorError) {
 			logger.error("Two-factor code validation error", twoFactorError.details)
 			return res
@@ -25,34 +20,19 @@ export const verifyAccount = async (req: Request, res: Response) => {
 				.json({ success: false, message: twoFactorError.details[0].message })
 		}
 
-		if (tokenError) {
-			logger.error("Verification token validation error", tokenError.details)
+		if (!userId) {
+			logger.error("No user ID found")
 			return res
 				.status(400)
-				.json({ success: false, message: tokenError.details[0].message })
+				.json({ success: false, message: "No user ID found" })
 		}
 
-		if (!token) {
-			logger.error("No verification token found")
-			return res
-				.status(400)
-				.json({ success: false, message: "No verification token found" })
-		}
-
-		const storedToken = await prisma.verificationToken.findUnique({
-			where: { token },
-		})
-
-		if (!storedToken || storedToken.expiresAt < new Date()) {
-			logger.error("Verification token expired or invalid")
-			return res.status(400).json({
-				success: false,
-				message: "Verification token expired or invalid",
-			})
-		}
+		logger.info("User ID", { userId })
 
 		const user = await prisma.user.findUnique({
-			where: { id: storedToken.userId },
+			where: { 
+				id: userId,
+			},
 		})
 
 		if (!user) {
@@ -60,14 +40,21 @@ export const verifyAccount = async (req: Request, res: Response) => {
 			return res.status(404).json({ success: false, message: "User not found" })
 		}
 
+		if (user.isVerified) {
+			logger.warn("User already verified", { userId: user.id })
+			return res
+				.status(400)
+				.json({ success: false, message: "User already verified" })
+		}
+
 		if (
 			user.twoFactorCode !== code ||
 			(user.twoFactorExp && user.twoFactorExp < new Date())
 		) {
-			logger.error("Invalid or expired two-factor code")
+			logger.error("Invalid or expired verification code")
 			return res
 				.status(400)
-				.json({ success: false, message: "Invalid or expired two-factor code" })
+				.json({ success: false, message: "Invalid or expired verification code" })
 		}
 
 		await prisma.user.update({
@@ -79,19 +66,17 @@ export const verifyAccount = async (req: Request, res: Response) => {
 			},
 		})
 
-		await publishEvent("user_events", "user.verified", {
+		
+		await publishEvent("identity.service", "user.verified", {
 			userId: user.id
 		})
-
-		res.clearCookie("verificationToken")
-		await prisma.verificationToken.deleteMany({
-			where: { userId: user.id },
-		})
-
+		await revokeVerificationToken(res)
+		
 		logger.info("Account verified successfully", { userId: user.id })
 		return res
 			.status(200)
 			.json({ success: true, message: "Account verified successfully" })
+
 	} catch (err) {
 		logger.error("Error verifying account", err)
 		return res.status(500).json({
