@@ -81,5 +81,5 @@ BongPay will start all core microservices, the API Gateway, RabbitMQ, Redis, and
 
 ## License
 
-BongPay is open-sourced under the MIT License — see the LICENSE
+BongPay is open-sourced under the MIT License — see the [LICENSE](https://github.com/VannySothea/BongPay-Ecommerce-Backend/blob/main/LICENSE)
  file for details.
