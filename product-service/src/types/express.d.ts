@@ -7,6 +7,8 @@ declare global {
 				userId: number
 				role: string
 			} & JwtPayload
+			redisClient?: Redis
 		}
 	}
+
 }

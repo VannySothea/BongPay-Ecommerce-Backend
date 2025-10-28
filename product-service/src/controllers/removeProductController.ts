@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import logger from "../utils/logger"
 import prisma from "../prismaClient"
 import { publishEvent } from "../utils/rabbitmq"
+import { invalidateProductCache } from "../utils/redisCache"
 
 export const removeProduct = async (req: Request, res: Response) => {
 	logger.info("Remove product endpoint hit")
@@ -37,6 +38,7 @@ export const removeProduct = async (req: Request, res: Response) => {
 		})
 
 		logger.info("Product removed successfully", { productId: id })
+		await invalidateProductCache(req, id)
 		return res.status(200).json({ success: true, message: "Product removed" })
 	} catch (error) {
 		logger.error("Error removing product", { error })

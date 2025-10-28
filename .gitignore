@@ -43,7 +43,7 @@ coverage/
 .tmp/
 
 # Docker & CI
-docker-compose.override.yml
+# docker-compose.override.yml
 *.pid
 *.seed
 *.tgz

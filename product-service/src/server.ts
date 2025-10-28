@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 dotenv.config()
 
-import express from "express"
+import express, { NextFunction, Request, Response } from "express"
 import helmet from "helmet"
 import { RateLimiterRedis } from "rate-limiter-flexible"
 import { Redis } from "ioredis"
@@ -99,7 +99,15 @@ app.use((req, res, next) => {
 // Stricter rate limiting only for sensitive endpoints (register/login/etc.)
 
 // Global per-IP rate limiting (short burst protection)
-app.use("/api/product", router)
+app.use(
+	"/api/product",
+	(req: Request, res: Response, next: NextFunction) => {
+		req.redisClient = redisClient
+		next()
+	},
+	router
+)
+
 app.use(errorHandler)
 
 async function startServer() {

@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./api-gateway:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  identity-service:
+    build:
+      context: ./identity-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./identity-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./product-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  media-service:
+    build:
+      context: ./media-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./media-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  search-service:
+    build:
+      context: ./search-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./search-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  cart-service:
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./cart-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./order-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./payment-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile.dev
+    volumes: 
+      - ./notification-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: pnpm run dev
+    

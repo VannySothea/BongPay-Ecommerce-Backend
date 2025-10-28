@@ -3,6 +3,7 @@ import logger from "../utils/logger"
 import prisma from "../prismaClient"
 import { validateUpdateProduct } from "../utils/validation"
 import { publishEvent } from "../utils/rabbitmq"
+import { invalidateProductCache } from "../utils/redisCache"
 
 export const updateProduct = async (req: Request, res: Response) => {
 	logger.info("Updating product endpoint hit")
@@ -160,6 +161,8 @@ export const updateProduct = async (req: Request, res: Response) => {
 		logger.info("Product updated successfully", {
 			productId: updatedProduct.id,
 		})
+
+		await invalidateProductCache(req, id)
 		return res.status(200).json({ success: true, product: updatedProduct })
 	} catch (error) {
 		logger.error("Error updating product", { error })

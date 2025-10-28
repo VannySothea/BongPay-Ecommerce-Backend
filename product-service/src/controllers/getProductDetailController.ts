@@ -2,7 +2,6 @@ import { Request, Response } from "express"
 import logger from "../utils/logger"
 import prisma from "../prismaClient"
 
-
 export const getProductDetail = async (req: Request, res: Response) => {
 	const productId = Number(req.params.id)
 	logger.info("Fetching product details", { productId })
@@ -14,13 +13,21 @@ export const getProductDetail = async (req: Request, res: Response) => {
 	}
 
 	try {
+		const cacheKey = `product:${productId}`
+		const cachedData = await req.redisClient.get(cacheKey)
+
+		if (cachedData) {
+			logger.info("Serving product detail from cache", { productId })
+			return res.status(200).json({ success: true, ...JSON.parse(cachedData) })
+		}
+
 		const product = await prisma.product.findUnique({
 			where: { id: productId },
 			include: {
 				variants: true,
 				properties: true,
 				discount: true,
-			}
+			},
 		})
 
 		if (!product) {
@@ -28,8 +35,13 @@ export const getProductDetail = async (req: Request, res: Response) => {
 				.status(404)
 				.json({ success: false, message: "Product not found" })
 		}
+		await req.redisClient.setex(
+			cacheKey,
+			3600, // Cache for 1 hour
+			JSON.stringify({ product })
+		)
 
-		res.status(200).json({ success: true, product })
+		return res.status(200).json({ success: true, product })
 	} catch (error) {
 		logger.error("Error fetching product details", { error })
 		res.status(500).json({ success: false, message: "Internal Server Error" })

@@ -19,9 +19,6 @@ COPY . .
 # Generate Prisma client before TypeScript compilation
 RUN pnpm exec prisma generate
 
-# Debug: list generated files to verify Prisma client
-RUN ls -R /usr/src/app/src/generated
-
 # Compile TypeScript
 RUN pnpm exec tsc
 
