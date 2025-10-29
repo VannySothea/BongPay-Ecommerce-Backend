@@ -11,10 +11,7 @@ It provides a modular, scalable foundation for building secure and event-driven 
 - **Identity & Authentication** — JWT-based authentication and role-based access control  
 - **Payment System** — Can handles multiple payment flows  
 - **Cart & Order Management** — Separate services for cart and order workflows  
-- **Product Service** — Full product CRUD and sea---
-
-## Architecture Overview
-rch integration  
+- **Product Service** — Full product CRUD and search integration  
 - **Notification Service** — Email notifications (via message broker)  
 - **Event-Driven Messaging** — Using RabbitMQ for inter-service communication  
 - **Caching & Rate Limiting** — Redis for caching and API protection  
